@@ -22,7 +22,7 @@ This project turns a Raspberry Pi into a searchable offline server packed with r
 Clone the repo and run the install script:
 
 ```bash
-git clone https://github.com/yourusername/knowledge-vault-pi.git
+git clone https://github.com/jerHutchings/knowledge-vault-pi.git
 cd knowledge-vault-pi
 chmod +x install.sh
 ./install.sh
