@@ -51,14 +51,14 @@ TITLE="Select Content to Install"
 MENU="Choose content categories:"
 
 OPTIONS=(
-  1 "Wikipedia Simple (ZIM)"
-  2 "Khan Academy (ZIM)"
-  3 "Project Gutenberg (ZIM)"
-  4 "Health PDFs"
-  5 "Engineering PDFs"
-  6 "Offline Canada Maps (.osm.pbf)"
-  7 "Programming Guides (Python, Linux)"
-  8 "Recoll Search Index"
+  1 "Wikipedia Simple (ZIM)" off  
+  2 "Project Gutenberg (ZIM)" off
+  3 "Health PDFs" off
+  4 "Engineering PDFs" off
+  5 "Offline Canada Maps (.osm.pbf)" off
+  6 "Programming Guides (Python, Linux)" off
+  7 "Recoll Search Index" off
+  8 "Fix It Guides (ZIM)" off
 )
 
 CHOICES=$(dialog --clear \
@@ -73,36 +73,61 @@ clear
 
 for CHOICE in $CHOICES; do
   case $CHOICE in
+    "8")
+      if [ ! -f zim/ifixit_en_all_2025-03.zim ]; then
+        wget -O zim/ifixit_en_all_2025-03.zim https://download.kiwix.org/zim/ifixit/ifixit_en_all_2025-03.zim
+      else
+        echo "✔️ Fix It ZIM already downloaded."
+      fi
+      ;;
     "1")
-      wget -O zim/wikipedia_simple_all_maxi.zim https://download.kiwix.org/zim/wikipedia/wikipedia_simple_all_maxi.zim
+      WIKI_ZIM=$(curl -s https://download.kiwix.org/zim/wikipedia/ | grep -Eo 'wikipedia_en_simple_all_maxi_[0-9\-]+\.zim' | tail -1)
+      if [ ! -f zim/"$WIKI_ZIM" ]; then
+        wget -O zim/"$WIKI_ZIM" https://download.kiwix.org/zim/wikipedia/"$WIKI_ZIM"
+      else
+        echo "✔️ Wikipedia ZIM already downloaded."
+      fi
       ;;
     "2")
-      if $LITE; then
-        echo "Skipping Khan Academy (too large for lite mode)"
+      if [ ! -f zim/gutenberg_en_all.zim ]; then
+        wget -O zim/gutenberg_en_all.zim https://download.kiwix.org/zim/gutenberg/gutenberg_en_all_2023-08.zim
       else
-        wget -O zim/khan-academy_en_all.zim https://download.kiwix.org/zim/khan-academy_en_all.zim
+        echo "✔️ Gutenberg ZIM already downloaded."
       fi
       ;;
     "3")
-      wget -O zim/gutenberg_en_all.zim https://download.kiwix.org/zim/gutenberg/gutenberg_en_all.zim
+      if [ ! -f pdfs/Where\ there\ is\ no\ Doctor\ -\ David\ Werner.pdf ]; then
+        wget -P pdfs "http://www.frankshospitalworkshop.com/organisation/biomed_documents/Where%20there%20is%20no%20Doctor%20-%20David%20Werner.pdf"
+      else
+        echo "✔️ Health PDF already downloaded."
+      fi
       ;;
     "4")
-      wget -P pdfs https://hesperian.org/wp-content/uploads/pdf/en_where_there_is_no_doctor_2015/en_where_there_is_no_doctor_2015.pdf
-      ;;
-    "5")
       if $LITE; then
         echo "Skipping engineering PDFs in lite mode."
       else
-        wget -P pdfs https://ocw.mit.edu/courses/mechanical-engineering/2-003sc-engineering-dynamics-fall-2011/Engineering_Dynamics.pdf
+        if [ ! -f pdfs/Engineering_Dynamics.pdf ]; then
+          wget -P pdfs https://ocw.mit.edu/courses/mechanical-engineering/2-003sc-engineering-dynamics-fall-2011/Engineering_Dynamics.pdf
+        else
+          echo "✔️ Engineering PDF already downloaded."
+        fi
+      fi
+      ;;
+    "5")
+      if [ ! -f maps/canada-latest.osm.pbf ]; then
+        wget -P maps https://download.geofabrik.de/north-america/canada-latest.osm.pbf
+      else
+        echo "✔️ Canada map already downloaded."
       fi
       ;;
     "6")
-      wget -P maps https://download.geofabrik.de/north-america/canada-latest.osm.pbf
+      if [ ! -f pdfs/eintr.pdf ]; then
+        wget -P pdfs https://www.gnu.org/software/emacs/manual/pdf/eintr.pdf
+      else
+        echo "✔️ Programming guide already downloaded."
+      fi
       ;;
     "7")
-      wget -P pdfs https://www.gnu.org/software/emacs/manual/pdf/eintr.pdf
-      ;;
-    "8")
       echo "Indexing content with Recoll..."
       recollindex -c ~/knowledge-vault/index
       ;;
