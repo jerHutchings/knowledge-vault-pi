@@ -5,6 +5,29 @@
 
 set -e
 
+# Detect architecture and choose appropriate Kiwix tools
+ARCH=$(uname -m)
+echo "Detected architecture: $ARCH"
+if [[ "$ARCH" == "armv6l" || "$ARCH" == "armv7l" ]]; then
+  echo "Installing Kiwix tools for 32-bit ARM..."
+  KIWIX_URL="https://download.kiwix.org/release/kiwix-tools/kiwix-tools_linux-armv6.tar.gz"
+elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+  echo "Installing Kiwix tools for 64-bit ARM..."
+  KIWIX_URL="https://download.kiwix.org/release/kiwix-tools/kiwix-tools_linux-arm64.tar.gz"
+else
+  echo "Unsupported architecture: $ARCH"
+  exit 1
+fi
+
+# Check for lite flag
+LITE=false
+for arg in "$@"; do
+  if [[ "$arg" == "--lite" ]]; then
+    LITE=true
+    echo "Running in lite mode. Only smaller files will be available."
+  fi
+done
+
 # Create directories
 mkdir -p ~/knowledge-vault/{zim,pdfs,maps,eBooks,scripts,index}
 cd ~/knowledge-vault
@@ -16,8 +39,8 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl wget unzip git recoll lighttpd dnsmasq hostapd dialog
 
 # Install Kiwix tools
-wget https://download.kiwix.org/release/kiwix-tools/kiwix-tools_linux-arm64.tar.gz
-mkdir -p kiwix-tools && tar -xzf kiwix-tools_linux-arm64.tar.gz -C kiwix-tools --strip-components=1
+wget "$KIWIX_URL" -O kiwix-tools.tar.gz
+mkdir -p kiwix-tools && tar -xzf kiwix-tools.tar.gz -C kiwix-tools --strip-components=1
 
 # Interactive content selection using dialog
 HEIGHT=20
@@ -54,7 +77,11 @@ for CHOICE in $CHOICES; do
       wget -O zim/wikipedia_simple_all_maxi.zim https://download.kiwix.org/zim/wikipedia/wikipedia_simple_all_maxi.zim
       ;;
     "2")
-      wget -O zim/khan-academy_en_all.zim https://download.kiwix.org/zim/khan-academy_en_all.zim
+      if $LITE; then
+        echo "Skipping Khan Academy (too large for lite mode)"
+      else
+        wget -O zim/khan-academy_en_all.zim https://download.kiwix.org/zim/khan-academy_en_all.zim
+      fi
       ;;
     "3")
       wget -O zim/gutenberg_en_all.zim https://download.kiwix.org/zim/gutenberg/gutenberg_en_all.zim
@@ -63,7 +90,11 @@ for CHOICE in $CHOICES; do
       wget -P pdfs https://hesperian.org/wp-content/uploads/pdf/en_where_there_is_no_doctor_2015/en_where_there_is_no_doctor_2015.pdf
       ;;
     "5")
-      wget -P pdfs https://ocw.mit.edu/courses/mechanical-engineering/2-003sc-engineering-dynamics-fall-2011/Engineering_Dynamics.pdf
+      if $LITE; then
+        echo "Skipping engineering PDFs in lite mode."
+      else
+        wget -P pdfs https://ocw.mit.edu/courses/mechanical-engineering/2-003sc-engineering-dynamics-fall-2011/Engineering_Dynamics.pdf
+      fi
       ;;
     "6")
       wget -P maps https://download.geofabrik.de/north-america/canada-latest.osm.pbf
