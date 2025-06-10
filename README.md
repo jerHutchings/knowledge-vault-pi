@@ -1,5 +1,7 @@
 # 📦 Knowledge Vault Pi
 
+**A work in progress! Some things might be broken.** 
+
 **A self-contained, offline library of human knowledge for Raspberry Pi and low-power Linux devices.**  
 This project turns a Raspberry Pi into a searchable offline server packed with resources like Wikipedia, Khan Academy, books, maps, emergency manuals, and programming guides.
 
