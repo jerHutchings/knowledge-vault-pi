@@ -61,7 +61,7 @@ OPTIONS=(
   6 "Programming Guides (Python, Linux)" off
   7 "Recoll Search Index" off
   8 "Fix It Guides (ZIM)" off
-  9 "LibreTexts STEM Library (ZIM)" off
+  9 "LibreTexts STEM Library (ZIMs)" off
 )
 
 CHOICES=$(dialog --clear \
@@ -149,14 +149,33 @@ for CHOICE in $CHOICES; do
       recollindex -c ~/knowledge-vault/index
       ;;
     "9")
-      LT_ZIM=$(curl -s https://download.kiwix.org/zim/libretexts/ | grep -Eo 'libretexts_en_[a-z0-9_]+_[0-9\-]+\.zim' | tail -1)
-      if [ ! -f zim/"$LT_ZIM" ]; then
-        if ! wget -O zim/"$LT_ZIM" https://download.kiwix.org/zim/libretexts/"$LT_ZIM"; then
-          echo "❌ Failed to download LibreTexts ZIM."
+      echo "Fetching available LibreTexts subjects..."
+      LIBRETEXT_LIST=$(curl -s https://download.kiwix.org/zim/libretexts/ | grep -Eo 'libretexts_en_[a-z0-9_]+_all_[0-9\-]+\.zim')
+      OPTIONS_LT=()
+      n=1
+      for FILE in $LIBRETEXT_LIST; do
+        OPTIONS_LT+=("$n" "$FILE" off)
+        ((n++))
+      done
+      CHOICES_LT=$(dialog --clear --backtitle "LibreTexts" --title "Select LibreTexts subjects" \
+                  --checklist "Choose subjects to download:" 20 80 15 \
+                  "${OPTIONS_LT[@]}" 2>&1 >/dev/tty)
+      clear
+      n=1
+      for FILE in $LIBRETEXT_LIST; do
+        if echo "$CHOICES_LT" | grep -q "\b$n\b"; then
+          if [ ! -f zim/"$FILE" ]; then
+            if ! wget -O zim/"$FILE" https://download.kiwix.org/zim/libretexts/"$FILE"; then
+              echo "❌ Failed to download $FILE."
+            else
+              echo "✔️ Downloaded $FILE."
+            fi
+          else
+            echo "✔️ $FILE already downloaded."
+          fi
         fi
-      else
-        echo "✔️ LibreTexts ZIM already downloaded."
-      fi
+        ((n++))
+      done
       ;;
   esac
   sleep 1
